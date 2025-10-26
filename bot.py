@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_BOT_TOKEN = "8386709935:AAHyDsPJs5hSYNDDeYPTPOKf3gam3RB_LDU"
-TELEGRAM_CHAT_ID = -5176823610  # Your group chat ID
+TELEGRAM_CHAT_ID = -1003184454690  # Your group chat ID
 PORT = int(os.environ.get('PORT', 5000))
 
 app = Flask(__name__)
@@ -77,4 +77,5 @@ def home():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=False)
+
 
