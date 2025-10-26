@@ -2,7 +2,6 @@ import os
 import logging
 from flask import Flask, request
 from telegram import Bot
-import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,17 +15,14 @@ bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    """Receive webhook from TradingView"""
     try:
         data = request.data.decode('utf-8')
         logger.info(f"Webhook received: {data}")
         
-        # Parse the alert data
         lines = data.strip().split('\n')
         
         if lines:
-            # Format as Telegram message
-            message = "🔔 **Top 5 Assets Update**\n\n"
+            message = "🔔 Top 5 Assets Update\n\n"
             message += "```
             message += f"{'RANK':<6} {'ASSET':<15} {'SUM':<8}\n"
             message += "─" * 35 + "\n"
@@ -40,13 +36,12 @@ def webhook():
             
             message += "```"
             
-            # Send to Telegram
             bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='Markdown')
-            logger.info("✅ Message sent to Telegram")
+            logger.info("Message sent to Telegram")
             return {"status": "ok"}, 200
         
     except Exception as e:
-        logger.error(f"❌ Error: {e}")
+        logger.error(f"Error: {e}")
         return {"error": str(e)}, 500
 
 @app.route('/')
