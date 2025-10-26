@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_BOT_TOKEN = "8386709935:AAHyDsPJs5hSYNDDeYPTPOKf3gam3RB_LDU"
-TELEGRAM_CHAT_ID = 5176823610
+TELEGRAM_CHAT_ID = -1001894765537  # Your group chat ID
 PORT = int(os.environ.get('PORT', 5000))
 
 app = Flask(__name__)
@@ -37,16 +37,29 @@ def webhook():
         lines = data.strip().split('\n')
         
         if lines:
-            message = "<b>🔔 Top 5 Assets Update</b>\n\n"
-            message += "<pre>RANK  ASSET           SUM\n"
-            message += "-----------------------------------\n"
-            
+            # Parse and sort by rank
+            assets_list = []
             for line in lines:
                 if line.strip():
                     parts = line.split('|')
                     if len(parts) == 3:
                         rank, asset, sum_val = parts
-                        message += f"{rank:<6}{asset:<15}{sum_val:<8}\n"
+                        assets_list.append({
+                            'rank': int(rank),
+                            'asset': asset,
+                            'sum': sum_val
+                        })
+            
+            # Sort by rank (1-5)
+            assets_list.sort(key=lambda x: x['rank'])
+            
+            # Format message
+            message = "<b>🔔 Top 5 Assets Update</b>\n\n"
+            message += "<pre>RANK  ASSET           SUM\n"
+            message += "-----------------------------------\n"
+            
+            for item in assets_list:
+                message += f"{item['rank']:<6}{item['asset']:<15}{item['sum']:<8}\n"
             
             message += "</pre>"
             
@@ -60,8 +73,7 @@ def webhook():
 
 @app.route('/')
 def home():
-    return {"status": "Bot running", "timestamp": "OK"}, 200
+    return {"status": "Bot running"}, 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=False)
-
