@@ -22,21 +22,18 @@ def webhook():
         lines = data.strip().split('\n')
         
         if lines:
-            message = "🔔 Top 5 Assets Update\n\n"
-            message += "```
-            message += f"{'RANK':<6} {'ASSET':<15} {'SUM':<8}\n"
-            message += "─" * 35 + "\n"
+            message = "Top 5 Assets Update\n\n"
+            message += "RANK  ASSET           SUM\n"
+            message += "-----------------------------------\n"
             
             for line in lines:
                 if line.strip():
                     parts = line.split('|')
                     if len(parts) == 3:
                         rank, asset, sum_val = parts
-                        message += f"{rank:<6} {asset:<15} {sum_val:<8}\n"
+                        message += f"{rank:<6}{asset:<15}{sum_val:<8}\n"
             
-            message += "```"
-            
-            bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='Markdown')
+            bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
             logger.info("Message sent to Telegram")
             return {"status": "ok"}, 200
         
