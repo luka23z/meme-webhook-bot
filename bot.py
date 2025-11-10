@@ -12,27 +12,26 @@ PORT = int(os.environ.get('PORT', 5000))
 
 app = Flask(__name__)
 
-# Color coding for ranks
-RANK_COLORS = {
-    1: "🥇",  # Gold
-    2: "🥈",  # Silver
-    3: "🥉",  # Bronze
+# Medal emojis for ranks
+RANK_EMOJIS = {
+    1: "🥇",
+    2: "🥈",
+    3: "🥉",
     4: "4️⃣",
     5: "5️⃣"
 }
 
-# Gradient colors for sum values
 def get_sum_color(sum_val, max_sum):
     """Return emoji based on sum value intensity"""
     ratio = sum_val / max_sum if max_sum > 0 else 0
     if ratio >= 0.95:
-        return "🔴"  # Red - highest
+        return "🔴"
     elif ratio >= 0.85:
-        return "🟠"  # Orange
+        return "🟠"
     elif ratio >= 0.75:
-        return "🟡"  # Yellow
+        return "🟡"
     else:
-        return "🟢"  # Green
+        return "🟢"
 
 def send_telegram_message(text):
     """Send message to Telegram"""
@@ -76,42 +75,61 @@ def webhook():
                         logger.error(f"Parse error: {e}")
                         continue
 
-        # Filter for ranks 1-5
-        filtered = [item for item in assets_list if 1 <= item['rank'] <= 5]
-        
-        # Sort by rank ONLY
-        filtered.sort(key=lambda x: x['rank'])
+        if not assets_list:
+            logger.info("No assets received.")
+            return {"status": "ok"}, 200
 
-        if filtered:
-            # Get max sum for color gradient
-            max_sum = max([item['sum'] for item in filtered])
+        # Sort by sum (score) descending - highest scores first
+        sorted_assets = sorted(assets_list, key=lambda x: x['sum'], reverse=True)
+        
+        # Take top 5
+        top_5 = sorted_assets[:5]
+        
+        # Assign ranks based on score position, but show ties
+        ranked_assets = []
+        for i, item in enumerate(top_5):
+            if i == 0:
+                display_rank = 1
+            elif top_5[i]['sum'] == top_5[i-1]['sum']:
+                # Same score as previous = same rank
+                display_rank = ranked_assets[-1]['display_rank']
+            else:
+                display_rank = i + 1
             
-            # Build professional message
-            message = "╔══════════════════════════════════╗\n"
-            message += "║  <b>🎯 TOP 5 MEMES</b>               ║\n"
-            message += "╚══════════════════════════════════╝\n\n"
+            ranked_assets.append({
+                **item,
+                'display_rank': display_rank,
+                'position': i + 1
+            })
+        
+        # Get max sum for color gradient
+        max_sum = max([item['sum'] for item in top_5])
+        
+        # Build professional message
+        message = "╔══════════════════════════════════╗\n"
+        message += "║  <b>🎯 TOP 5 MEMES</b>               ║\n"
+        message += "╚══════════════════════════════════╝\n\n"
+        
+        for item in ranked_assets:
+            rank_emoji = RANK_EMOJIS.get(item['display_rank'], "•")
+            sum_emoji = get_sum_color(item['sum'], max_sum)
             
-            for i, item in enumerate(filtered):
-                rank_emoji = RANK_COLORS.get(item['rank'], "•")
-                sum_emoji = get_sum_color(item['sum'], max_sum)
-                
-                # Create bar representation
-                bar_length = int((item['sum'] / max_sum) * 10)
-                bar = "█" * bar_length + "░" * (10 - bar_length)
-                
-                message += f"{rank_emoji} <b>{item['asset']}</b>\n"
-                message += f"   {sum_emoji} Score: <code>{item['sum']}</code>  {bar}\n"
-                
-                if i < len(filtered) - 1:
-                    message += "\n"
+            # Create bar representation
+            bar_length = int((item['sum'] / max_sum) * 10)
+            bar = "█" * bar_length + "░" * (10 - bar_length)
             
-            message += "\n" + "─" * 34 + "\n"
-            message += f"📊 <i>Updated: {__import__('datetime').datetime.now().strftime('%H:%M:%S')}</i>"
+            # Show tie indicator if score matches previous
+            tie_indicator = "🔗 " if item['display_rank'] == ranked_assets[item['position'] - 2]['display_rank'] if item['position'] > 1 else ""
             
-            send_telegram_message(message)
-            logger.info(f"Professional message sent with {len(filtered)} assets")
-        else:
-            logger.info("No assets found for rank 1-5.")
+            message += f"{rank_emoji} <b>{item['asset']}</b>\n"
+            message += f"   {sum_emoji} Score: <code>{item['sum']}</code>  {bar}\n"
+            message += "\n"
+        
+        message += "─" * 34 + "\n"
+        message += f"📊 <i>Updated: {__import__('datetime').datetime.now().strftime('%H:%M:%S')}</i>"
+        
+        send_telegram_message(message)
+        logger.info(f"Message sent with top 5 assets")
 
         return {"status": "ok"}, 200
 
