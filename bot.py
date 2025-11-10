@@ -58,26 +58,21 @@ def webhook():
 
         # Sort by sum (score) descending
         sorted_assets = sorted(assets_list, key=lambda x: x['sum'], reverse=True)
-        
-        # Take top 5
         top_5 = sorted_assets[:5]
-        
-        # Get max sum for bar scaling
         max_sum = max([item['sum'] for item in top_5])
-        
-        # Build premium message
-        message = "╔═══════════════════════════════════════╗\n"
-        message += "║ 🎯 <b>TOP 5 MEMES</b>  |  📊 <b>QUANT SYSTEM</b> ║\n"
-        message += "╚═══════════════════════════════════════╝\n\n"
-        
+
+        # Build narrow premium message
+        message = "╔══════════════════════╗\n"
+        message += "║ <b>🎯 TOP 5 MEMES</b> ║\n"
+        message += "║ <b>📊 QUANT SYSTEM</b> ║\n"
+        message += "╚══════════════════════╝\n\n"
+
         for item in top_5:
-            # Create green bar
-            bar_length = int((item['sum'] / max_sum) * 10)
-            bar = "🟩" * bar_length + "⬜" * (10 - bar_length)
-            
+            bar_length = int((item['sum'] / max_sum) * 7)
+            bar = "🟩" * bar_length + "⬜" * (7 - bar_length)
             message += f"<b>{item['asset']}</b>\n"
             message += f"Score: <b><u>{item['sum']}</u></b>  {bar}\n\n"
-        
+
         send_telegram_message(message)
         logger.info(f"Message sent with top 5 assets")
 
