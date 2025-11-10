@@ -12,6 +12,28 @@ PORT = int(os.environ.get('PORT', 5000))
 
 app = Flask(__name__)
 
+# Color coding for ranks
+RANK_COLORS = {
+    1: "🥇",  # Gold
+    2: "🥈",  # Silver
+    3: "🥉",  # Bronze
+    4: "4️⃣",
+    5: "5️⃣"
+}
+
+# Gradient colors for sum values
+def get_sum_color(sum_val, max_sum):
+    """Return emoji based on sum value intensity"""
+    ratio = sum_val / max_sum if max_sum > 0 else 0
+    if ratio >= 0.95:
+        return "🔴"  # Red - highest
+    elif ratio >= 0.85:
+        return "🟠"  # Orange
+    elif ratio >= 0.75:
+        return "🟡"  # Yellow
+    else:
+        return "🟢"  # Green
+
 def send_telegram_message(text):
     """Send message to Telegram"""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -57,22 +79,37 @@ def webhook():
         # Filter for ranks 1-5
         filtered = [item for item in assets_list if 1 <= item['rank'] <= 5]
         
-        # Sort by rank ONLY - keep all duplicates in order received
+        # Sort by rank ONLY
         filtered.sort(key=lambda x: x['rank'])
 
-        # Format message
-        message = "<b>🔔 Top 5 Memes</b>\n\n"
-        message += "<pre>RANK  MEME           SUM\n"
-        message += "-----------------------------------\n"
-        for item in filtered:
-            message += f"{item['rank']:<6}{item['asset']:<15}{item['sum']:<8}\n"
-        message += "</pre>"
-
-        logger.info(f"Filtered assets: {filtered}")
-        
         if filtered:
+            # Get max sum for color gradient
+            max_sum = max([item['sum'] for item in filtered])
+            
+            # Build professional message
+            message = "╔══════════════════════════════════╗\n"
+            message += "║  <b>🎯 TOP 5 MEMES</b>               ║\n"
+            message += "╚══════════════════════════════════╝\n\n"
+            
+            for i, item in enumerate(filtered):
+                rank_emoji = RANK_COLORS.get(item['rank'], "•")
+                sum_emoji = get_sum_color(item['sum'], max_sum)
+                
+                # Create bar representation
+                bar_length = int((item['sum'] / max_sum) * 10)
+                bar = "█" * bar_length + "░" * (10 - bar_length)
+                
+                message += f"{rank_emoji} <b>{item['asset']}</b>\n"
+                message += f"   {sum_emoji} Score: <code>{item['sum']}</code>  {bar}\n"
+                
+                if i < len(filtered) - 1:
+                    message += "\n"
+            
+            message += "\n" + "─" * 34 + "\n"
+            message += f"📊 <i>Updated: {__import__('datetime').datetime.now().strftime('%H:%M:%S')}</i>"
+            
             send_telegram_message(message)
-            logger.info(f"Message sent with {len(filtered)} assets")
+            logger.info(f"Professional message sent with {len(filtered)} assets")
         else:
             logger.info("No assets found for rank 1-5.")
 
