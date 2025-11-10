@@ -12,7 +12,6 @@ PORT = int(os.environ.get('PORT', 5000))
 
 app = Flask(__name__)
 
-# Medal emojis for ranks
 RANK_EMOJIS = {
     1: "🥇",
     2: "🥈",
@@ -79,7 +78,7 @@ def webhook():
             logger.info("No assets received.")
             return {"status": "ok"}, 200
 
-        # Sort by sum (score) descending - highest scores first
+        # Sort by sum (score) descending
         sorted_assets = sorted(assets_list, key=lambda x: x['sum'], reverse=True)
         
         # Take top 5
@@ -91,7 +90,6 @@ def webhook():
             if i == 0:
                 display_rank = 1
             elif top_5[i]['sum'] == top_5[i-1]['sum']:
-                # Same score as previous = same rank
                 display_rank = ranked_assets[-1]['display_rank']
             else:
                 display_rank = i + 1
@@ -110,7 +108,7 @@ def webhook():
         message += "║  <b>🎯 TOP 5 MEMES</b>               ║\n"
         message += "╚══════════════════════════════════╝\n\n"
         
-        for item in ranked_assets:
+        for idx, item in enumerate(ranked_assets):
             rank_emoji = RANK_EMOJIS.get(item['display_rank'], "•")
             sum_emoji = get_sum_color(item['sum'], max_sum)
             
@@ -118,14 +116,17 @@ def webhook():
             bar_length = int((item['sum'] / max_sum) * 10)
             bar = "█" * bar_length + "░" * (10 - bar_length)
             
-            # Show tie indicator if score matches previous
-            tie_indicator = "🔗 " if item['display_rank'] == ranked_assets[item['position'] - 2]['display_rank'] if item['position'] > 1 else ""
+            # Check if this item has same rank as previous (for tie indicator)
+            tie_indicator = ""
+            if idx > 0 and item['display_rank'] == ranked_assets[idx - 1]['display_rank']:
+                tie_indicator = "🔗 "
             
             message += f"{rank_emoji} <b>{item['asset']}</b>\n"
             message += f"   {sum_emoji} Score: <code>{item['sum']}</code>  {bar}\n"
-            message += "\n"
+            if idx < len(ranked_assets) - 1:
+                message += "\n"
         
-        message += "─" * 34 + "\n"
+        message += "\n" + "─" * 34 + "\n"
         message += f"📊 <i>Updated: {__import__('datetime').datetime.now().strftime('%H:%M:%S')}</i>"
         
         send_telegram_message(message)
