@@ -2,7 +2,6 @@ import os
 import logging
 from flask import Flask, request
 import requests
-from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -78,9 +77,6 @@ def webhook():
             
             message += f"<b>{item['asset']}</b>\n"
             message += f"Score: <b><code>{item['sum']}</code></b> {bar}\n\n"
-        
-        message += "─" * 34 + "\n"
-        message += f"📊 <i>Updated: {datetime.now().strftime('%H:%M:%S')}</i>"
         
         send_telegram_message(message)
         logger.info(f"Message sent with top 5 assets")
