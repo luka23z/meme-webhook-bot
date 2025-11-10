@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_BOT_TOKEN = "8386709935:AAHyDsPJs5hSYNDDeYPTPOKf3gam3RB_LDU"
-TELEGRAM_CHAT_ID = -1003184454690  # Your group chat ID
+TELEGRAM_CHAT_ID = -1003184454690
 PORT = int(os.environ.get('PORT', 5000))
 
 app = Flask(__name__)
@@ -42,34 +42,37 @@ def webhook():
                 parts = line.split('|')
                 if len(parts) == 3:
                     rank, asset, sum_val = parts
-                    # Parse rank and sum as integers for sorting
                     try:
                         rank_int = int(rank)
                         sum_int = int(sum_val)
                         assets_list.append({
                             'rank': rank_int,
-                            'asset': asset,
+                            'asset': asset.strip(),
                             'sum': sum_int
                         })
                     except Exception as e:
+                        logger.error(f"Parse error: {e}")
                         continue
 
-        # Filter for ranks 1-5, KEEPING ALL with those ranks (including duplicates)
+        # Filter for ranks 1-5
         filtered = [item for item in assets_list if 1 <= item['rank'] <= 5]
-        # Sort numerologically by rank (ties shown, highest sum first for ties)
-        filtered.sort(key=lambda x: (x['rank'], -x['sum']))
+        
+        # Sort by rank ONLY - keep all duplicates in order received
+        filtered.sort(key=lambda x: x['rank'])
 
         # Format message
-        message = "<b>🔔 Top 5 Assets Update</b>\n\n"
-        message += "<pre>RANK  ASSET           SUM\n"
+        message = "<b>🔔 Top 5 Memes</b>\n\n"
+        message += "<pre>RANK  MEME           SUM\n"
         message += "-----------------------------------\n"
         for item in filtered:
             message += f"{item['rank']:<6}{item['asset']:<15}{item['sum']:<8}\n"
         message += "</pre>"
 
+        logger.info(f"Filtered assets: {filtered}")
+        
         if filtered:
             send_telegram_message(message)
-            logger.info("Message sent to Telegram")
+            logger.info(f"Message sent with {len(filtered)} assets")
         else:
             logger.info("No assets found for rank 1-5.")
 
