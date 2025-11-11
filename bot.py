@@ -69,11 +69,10 @@ def webhook():
         for idx, item in enumerate(top_5, 1):
             bar_length = int((item['sum'] / max_sum) * 7)
             bar = "🟩" * bar_length + "⬜" * (7 - bar_length)
-            message += f"<b>◆ {item['asset']}</b>\n"
+            message += f"<b>∑ {item['asset']}</b>\n"
             message += f"   Score: <b><u>{item['sum']}</u></b> {bar}\n\n"
 
-        message += "━━━━━━━━━━━━━━━━━━━\n"
-        message += "✨ <i>Powered by AI</i>"
+        message += "━━━━━━━━━━━━━━━━━━━"
 
         send_telegram_message(message)
         logger.info(f"Message sent with top 5 assets")
