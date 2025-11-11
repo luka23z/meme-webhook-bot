@@ -62,7 +62,7 @@ def webhook():
         max_sum = max([item['sum'] for item in top_5])
 
         # Build futuristic premium message
-        message = "<b>🎯 MEMES DOMINANCE</b>\n"
+        message = "<b>🧮 MEMES DOMINANCE</b>\n"
         message += "<b>📊 QUANT SYSTEM</b>\n"
         message += "━━━━━━━━━━━━━━━━━━━\n\n"
 
@@ -89,3 +89,4 @@ def home():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=False)
+
