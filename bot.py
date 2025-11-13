@@ -64,7 +64,7 @@ def webhook():
         # Build futuristic premium message
         message = "<b>🧮 MEMES DOMINANCE</b>\n"
         message += "<b>📊 QUANT SYSTEM</b>\n"
-        message += "━━━━━━━━━━━━━━━━━━━\n\n"
+        message += "━━━━━━━━━━━━━━━━\n\n"
 
         for idx, item in enumerate(top_5, 1):
             bar_length = int((item['sum'] / max_sum) * 7)
@@ -72,7 +72,7 @@ def webhook():
             message += f"<b>∑ {item['asset']}</b>\n"
             message += f"   Score: <b><u>{item['sum']}</u></b> {bar}\n\n"
 
-        message += "━━━━━━━━━━━━━━━━━━━"
+        message += "━━━━━━━━━━━━━━━━"
 
         send_telegram_message(message)
         logger.info(f"Message sent with top 5 assets")
@@ -89,4 +89,5 @@ def home():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=False)
+
 
